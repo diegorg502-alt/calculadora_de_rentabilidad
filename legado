@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora CAC · Semáforos de escalado — Meta Ads</title>
+<style>
+  :root {
+    --bg: #FAFAF7;
+    --surface: #FFFFFF;
+    --surface-alt: #F1EFE8;
+    --text: #1A1A1A;
+    --text-secondary: #5F5E5A;
+    --text-tertiary: #888780;
+    --border: rgba(0,0,0,0.10);
+    --border-strong: rgba(0,0,0,0.18);
+    --accent: #1A1A1A;
+    --green: #3B6D11;
+    --green-bg: #EAF3DE;
+    --green-border: #97C459;
+    --amber: #854F0B;
+    --amber-bg: #FAEEDA;
+    --amber-border: #EF9F27;
+    --red: #791F1F;
+    --red-bg: #FCEBEB;
+    --red-border: #E24B4A;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1C1C1A;
+      --surface: #262624;
+      --surface-alt: #2F2F2D;
+      --text: #F1EFE8;
+      --text-secondary: #B4B2A9;
+      --text-tertiary: #888780;
+      --border: rgba(255,255,255,0.10);
+      --border-strong: rgba(255,255,255,0.20);
+      --accent: #F1EFE8;
+      --green-bg: #173404;
+      --amber-bg: #412402;
+      --red-bg: #4B1313;
+      --green: #C0DD97;
+      --amber: #FAC775;
+      --red: #F7C1C1;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  .container { max-width: 1080px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+
+  header {
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 0.5px solid var(--border);
+  }
+
+  h1 { font-size: 26px; font-weight: 500; margin: 0 0 6px; letter-spacing: -0.01em; }
+  .subtitle { font-size: 14px; color: var(--text-secondary); margin: 0; }
+
+  .tabs { display: flex; gap: 4px; margin-bottom: 2rem; border-bottom: 0.5px solid var(--border); overflow-x: auto; }
+  .tab-btn {
+    padding: 12px 18px; background: transparent; border: none;
+    border-bottom: 2px solid transparent; color: var(--text-secondary);
+    font-size: 14px; font-weight: 400; cursor: pointer; font-family: inherit;
+    transition: all 0.15s; white-space: nowrap;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { border-bottom-color: var(--accent); color: var(--text); font-weight: 500; }
+
+  .section-label { font-size: 14px; font-weight: 500; margin: 0 0 12px; }
+  .section-desc { font-size: 13px; color: var(--text-secondary); margin: 0 0 1rem; line-height: 1.55; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem; }
+  .grid-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
+
+  .field label { display: block; font-size: 13px; font-weight: 500; margin: 0 0 4px; color: var(--text); }
+  .field .hint { font-size: 12px; color: var(--text-tertiary); margin: 0 0 8px; }
+
+  input[type="text"], input[type="number"], select {
+    width: 100%; padding: 9px 12px; font-size: 14px; font-family: inherit;
+    color: var(--text); background: var(--surface);
+    border: 0.5px solid var(--border-strong); border-radius: var(--radius-md);
+    outline: none; transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,0,0,0.06); }
+  @media (prefers-color-scheme: dark) {
+    input:focus, select:focus { box-shadow: 0 0 0 3px rgba(255,255,255,0.06); }
+  }
+
+  button {
+    font-family: inherit; cursor: pointer;
+    border: 0.5px solid var(--border-strong); background: transparent;
+    color: var(--text); border-radius: var(--radius-md); transition: all 0.15s;
+  }
+  button:hover { background: var(--surface-alt); }
+  button:active { transform: scale(0.98); }
+
+  .btn-primary {
+    width: 100%; padding: 13px; font-size: 14px; font-weight: 500;
+    background: var(--accent); color: var(--bg); border: none; margin-bottom: 1.5rem;
+  }
+  .btn-primary:hover { opacity: 0.88; background: var(--accent); }
+
+  .btn-secondary { width: 100%; padding: 10px; font-size: 13px; }
+
+  .mode-toggle {
+    display: inline-flex; background: var(--surface-alt); padding: 3px;
+    border-radius: var(--radius-md); margin-bottom: 1rem;
+  }
+  .mode-btn {
+    padding: 7px 14px; font-size: 13px; border: none; background: transparent;
+    color: var(--text-secondary); border-radius: 6px; cursor: pointer;
+    font-family: inherit; transition: all 0.15s;
+  }
+  .mode-btn.active {
+    background: var(--surface); color: var(--text); font-weight: 500;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  }
+
+  .info-box {
+    background: var(--surface-alt); border-radius: var(--radius-md);
+    padding: 12px 14px; font-size: 12px; color: var(--text-secondary);
+    line-height: 1.55; margin-bottom: 1rem;
+  }
+
+  .metric-card { background: var(--surface-alt); border-radius: var(--radius-md); padding: 1rem; }
+  .metric-card .label { font-size: 13px; color: var(--text-secondary); margin: 0 0 4px; }
+  .metric-card .value { font-size: 22px; font-weight: 500; margin: 0; }
+
+  .card {
+    background: var(--surface); border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg); padding: 1.1rem 1.3rem; margin-bottom: 1rem;
+  }
+  .card-title { font-size: 14px; font-weight: 500; margin: 0 0 12px; }
+
+  .scenarios {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px; margin-bottom: 1.5rem;
+  }
+  .scenario {
+    border: 0.5px solid var(--border); border-radius: var(--radius-lg);
+    padding: 1rem 1.1rem; background: var(--surface); position: relative;
+  }
+  .scenario.recommended { border: 2px solid var(--green-border); }
+  .scenario-badge {
+    position: absolute; top: -10px; left: 16px;
+    background: var(--green); color: var(--bg);
+    font-size: 11px; font-weight: 500;
+    padding: 3px 10px; border-radius: 10px;
+  }
+  .scenario-name {
+    font-size: 13px; font-weight: 500; color: var(--text-secondary);
+    margin: 0 0 4px; text-transform: uppercase; letter-spacing: 0.03em;
+  }
+  .scenario-cac { font-size: 28px; font-weight: 500; margin: 4px 0 2px; }
+  .scenario-subtitle { font-size: 12px; color: var(--text-tertiary); margin: 0 0 12px; }
+  .scenario-divider { border-top: 0.5px solid var(--border); margin: 12px 0; padding-top: 12px; }
+  .scenario-row {
+    display: flex; justify-content: space-between; font-size: 13px; padding: 3px 0;
+  }
+  .scenario-row .lbl { color: var(--text-secondary); }
+  .scenario-row .val { font-weight: 500; }
+  .scenario-desc {
+    font-size: 12px; color: var(--text-secondary); margin: 10px 0 0;
+    line-height: 1.5; padding-top: 10px; border-top: 0.5px solid var(--border);
+  }
+
+  .client-list { margin-top: 1.5rem; }
+  .client-list-title { font-size: 13px; font-weight: 500; margin: 0 0 10px; }
+  .client-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .client-chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 7px 12px; font-size: 12px; font-family: inherit;
+    background: var(--surface-alt); border: 0.5px solid var(--border);
+    border-radius: var(--radius-md); color: var(--text);
+  }
+  .client-chip:hover { background: var(--surface); border-color: var(--border-strong); }
+  .chip-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .chip-del {
+    margin-left: 4px; padding: 2px 6px; font-size: 14px;
+    color: var(--text-tertiary); background: transparent; border: none; border-radius: 4px;
+  }
+  .chip-del:hover { color: var(--red); background: var(--red-bg); }
+
+  .selector-box {
+    background: var(--surface-alt); border-radius: var(--radius-md);
+    padding: 1rem; margin-bottom: 1.5rem;
+  }
+  .selector-label { font-size: 13px; color: var(--text-secondary); margin: 0 0 8px; }
+
+  .escenario-selector {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+    margin-top: 12px;
+  }
+  .esc-radio {
+    padding: 10px; border: 0.5px solid var(--border-strong);
+    border-radius: var(--radius-md); cursor: pointer;
+    text-align: center; font-size: 13px; background: var(--surface);
+    transition: all 0.15s;
+  }
+  .esc-radio:hover { background: var(--surface-alt); }
+  .esc-radio.selected { border: 2px solid var(--accent); font-weight: 500; }
+  .esc-radio small {
+    display: block; font-size: 11px; color: var(--text-secondary); margin-top: 2px;
+  }
+
+  .diag-box { padding: 1.1rem 1.3rem; border-radius: var(--radius-lg); margin-bottom: 1rem; }
+  .diag-title { font-size: 16px; font-weight: 500; margin: 0 0 4px; }
+  .diag-action { font-size: 13px; margin: 0; line-height: 1.6; }
+
+  .diag-saludable { background: var(--green-bg); border: 0.5px solid var(--green-border); }
+  .diag-saludable .diag-title, .diag-saludable .diag-action { color: var(--green); }
+  .diag-riesgo { background: var(--amber-bg); border: 0.5px solid var(--amber-border); }
+  .diag-riesgo .diag-title, .diag-riesgo .diag-action { color: var(--amber); }
+  .diag-suicida { background: var(--red-bg); border: 0.5px solid var(--red-border); }
+  .diag-suicida .diag-title, .diag-suicida .diag-action { color: var(--red); }
+
+  .sem-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px; margin-bottom: 1.5rem;
+  }
+  .sem-card {
+    background: var(--surface); border: 0.5px solid var(--border);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    padding: 12px 14px;
+  }
+  .sem-card .sem-label { font-size: 12px; color: var(--text-secondary); margin: 0 0 4px; }
+  .sem-card .sem-value { font-size: 15px; font-weight: 500; margin: 0 0 6px; }
+  .sem-card .sem-text { font-size: 12px; color: var(--text-secondary); margin: 0; line-height: 1.5; }
+
+  .rec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+  .rec-card { border-radius: var(--radius-md); padding: 12px; }
+  .rec-current { background: var(--surface-alt); }
+  .rec-new { background: var(--green-bg); }
+  .rec-label { font-size: 12px; margin: 0 0 4px; color: var(--text-secondary); }
+  .rec-new .rec-label { color: var(--green); }
+  .rec-value { font-size: 18px; font-weight: 500; margin: 0; }
+  .rec-new .rec-value { color: var(--green); }
+
+  .cac-real-box {
+    background: var(--surface); border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg); padding: 1rem 1.2rem;
+    margin-bottom: 1rem;
+  }
+  .cac-real-label { font-size: 12px; color: var(--text-secondary); margin: 0 0 4px; }
+  .cac-real-value { font-size: 24px; font-weight: 500; margin: 0 0 6px; }
+  .cac-real-formula { font-size: 12px; color: var(--text-tertiary); margin: 0; line-height: 1.5; font-family: ui-monospace, monospace; }
+
+  .hidden { display: none !important; }
+
+  .empty-state {
+    padding: 2rem 1rem; text-align: center; color: var(--text-tertiary);
+    font-size: 13px; border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-lg);
+  }
+
+  footer {
+    margin-top: 3rem; padding-top: 1.5rem; border-top: 0.5px solid var(--border);
+    font-size: 12px; color: var(--text-tertiary); text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>Calculadora CAC · Escalado</h1>
+    <p class="subtitle">Calcula el CAC objetivo saludable y decide cuándo escalar en base al embudo real del cliente</p>
+  </header>
+
+  <div class="tabs">
+    <button id="tab-economia" class="tab-btn active">Economía del cliente</button>
+    <button id="tab-semaforos" class="tab-btn">Semáforos de escalado</button>
+  </div>
+
+  <!-- PANEL ECONOMÍA -->
+  <div id="panel-economia">
+
+    <p class="section-label">Paso 1 — Datos del negocio</p>
+    <p class="section-desc">El ticket es el valor total del programa/servicio (ej: programa de 1.500€ = ticket 1.500€, aunque se financie en varios plazos). Las renovaciones indican cuántas veces recompra el cliente ese programa completo.</p>
+
+    <div class="grid">
+      <div class="field">
+        <label for="cliente">Nombre del cliente</label>
+        <p class="hint">Identificador de la ficha</p>
+        <input type="text" id="cliente" placeholder="Ej: Cliente" />
+      </div>
+
+      <div class="field">
+        <label for="tipo">Tipo de negocio</label>
+        <p class="hint">Ajusta márgenes y benchmarks</p>
+        <select id="tipo">
+          <option value="asesoria">Asesoría / high-ticket</option>
+          <option value="infoproducto">Infoproducto / curso</option>
+          <option value="ecommerce">Ecommerce</option>
+          <option value="servicio">Servicio recurrente</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="ticket">Ticket (€)</label>
+        <p class="hint">Valor total del programa o contrato completo, independientemente de cómo se pague</p>
+        <input type="number" id="ticket" placeholder="1500" min="0" step="1" />
+      </div>
+
+      <div class="field">
+        <label for="renovaciones">Nº de renovaciones</label>
+        <p class="hint">Cuántas veces recompra el cliente el programa completo (1 = sin renovación)</p>
+        <input type="number" id="renovaciones" placeholder="1" min="1" step="1" />
+      </div>
+    </div>
+
+    <p class="section-label">Paso 2 — Margen del cliente</p>
+    <p class="section-desc">Margen bruto tras costes directos de entrega. La publicidad se descuenta DESPUÉS.</p>
+
+    <div class="mode-toggle">
+      <button class="mode-btn active" data-mode="rapido">Modo rápido</button>
+      <button class="mode-btn" data-mode="preciso">Modo preciso</button>
+    </div>
+
+    <div id="info-rapido" class="info-box">
+      Usaré el margen medio estimado para el sector seleccionado.
+    </div>
+    <div id="info-preciso" class="info-box hidden">
+      Introduce el margen bruto real del cliente si lo conoce.
+    </div>
+
+    <div id="campo-margen" class="field hidden" style="max-width: 280px; margin-bottom: 1.5rem;">
+      <label for="margen">Margen bruto (%)</label>
+      <p class="hint">Antes de descontar publicidad</p>
+      <input type="number" id="margen" placeholder="70" min="1" max="100" step="1" />
+    </div>
+
+    <button class="btn-primary" id="calcular">Calcular escenarios</button>
+
+    <div id="resultados" class="hidden">
+
+      <p class="section-label">Escenarios de CAC objetivo</p>
+      <p class="section-desc" id="resultados-desc"></p>
+
+      <div class="scenarios" id="scenarios-grid"></div>
+
+      <p class="section-label" style="margin-top: 1.5rem;">Números base del negocio</p>
+      <div class="grid-metrics">
+        <div class="metric-card"><p class="label">LTV bruto</p><p id="r-ltv" class="value">—</p></div>
+        <div class="metric-card"><p class="label">LTV con margen</p><p id="r-ltv-margen" class="value">—</p></div>
+        <div class="metric-card"><p class="label">Margen aplicado</p><p id="r-margen" class="value">—</p></div>
+        <div class="metric-card"><p class="label">Breakeven ROAS</p><p id="r-roas" class="value">—</p></div>
+      </div>
+
+      <div class="card">
+        <p class="card-title">Cómo leer los escenarios</p>
+        <p style="font-size: 13px; color: var(--text-secondary); margin: 0; line-height: 1.7;" id="como-leer"></p>
+      </div>
+
+      <button class="btn-secondary" id="guardar">Guardar cliente</button>
+
+      <div id="clientes-guardados" class="client-list"></div>
+    </div>
+  </div>
+
+  <!-- PANEL SEMÁFOROS -->
+  <div id="panel-semaforos" class="hidden">
+
+    <div class="selector-box">
+      <p class="selector-label">Cliente a evaluar</p>
+      <select id="cliente-select">
+        <option value="">Selecciona un cliente guardado</option>
+      </select>
+    </div>
+
+    <div id="sin-clientes" class="empty-state">
+      Aún no tienes clientes guardados. Crea uno en la pestaña "Economía del cliente" primero.
+    </div>
+
+    <div id="formulario-semaforos" class="hidden">
+
+      <p class="section-label">Estado actual de la campaña y embudo</p>
+      <p class="section-desc">Meto los 3 indicadores del embudo completo: captación (CPL), calificación (agenda) y cierre. El sistema calcula el CAC real y lo compara con los 3 escenarios del negocio para decidir si escalar y a qué velocidad.</p>
+
+      <div class="grid">
+        <div class="field">
+          <label for="s-cpl">CPL actual (€)</label>
+          <p class="hint">Coste por lead, últimos 7-14 días</p>
+          <input type="number" id="s-cpl" min="0" step="0.01" placeholder="15" />
+        </div>
+        <div class="field">
+          <label for="s-agenda">% de agendamiento</label>
+          <p class="hint">De los leads, cuántos agendan llamada</p>
+          <input type="number" id="s-agenda" min="0" max="100" step="0.1" placeholder="40" />
+        </div>
+        <div class="field">
+          <label for="s-cierre">% de cierre</label>
+          <p class="hint">De los agendados, cuántos compran</p>
+          <input type="number" id="s-cierre" min="0" max="100" step="0.1" placeholder="25" />
+        </div>
+        <div class="field">
+          <label for="s-presupuesto">Presupuesto actual (€/día)</label>
+          <p class="hint">Por campaña o conjunto</p>
+          <input type="number" id="s-presupuesto" min="0" step="1" placeholder="50" />
+        </div>
+      </div>
+
+      <button class="btn-primary" id="evaluar">Evaluar y recomendar</button>
+
+      <div id="evaluacion" class="hidden">
+
+        <div id="cac-real-box" class="cac-real-box">
+          <p class="cac-real-label">CAC real del embudo</p>
+          <p id="cac-real-value" class="cac-real-value"></p>
+          <p id="cac-real-formula" class="cac-real-formula"></p>
+        </div>
+
+        <div id="diagnostico-global" class="diag-box">
+          <p id="diag-titulo" class="diag-title"></p>
+          <p id="diag-accion" class="diag-action"></p>
+        </div>
+
+        <p class="section-label" style="margin-top: 1.5rem;">Posición del CAC real frente a los escenarios</p>
+        <div id="semaforos-grid" class="sem-grid"></div>
+
+        <div class="card">
+          <p class="card-title">Acción recomendada</p>
+          <p id="recomendacion-texto" style="font-size: 13px; margin: 0; line-height: 1.7; color: var(--text-secondary);"></p>
+          <div id="recomendacion-numerica"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Basado en principios de F. Vergara, N. Seoane y documentación oficial de Meta 2025-2026 · Los datos se guardan localmente en tu navegador
+  </footer>
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const fmt = n => new Intl.NumberFormat('es-ES', {style:'currency', currency:'EUR', maximumFractionDigits: 0}).format(Math.round(n));
+  const fmt2 = n => new Intl.NumberFormat('es-ES', {style:'currency', currency:'EUR', maximumFractionDigits: 2}).format(n);
+
+  const BENCHMARKS = {
+    asesoria: {
+      nombre: 'Asesoría / high-ticket',
+      margenEstimado: 75,
+      escenarios: {
+        conservador: { pct: 0.25, label: 'Máximo margen, crecimiento lento' },
+        estandar:    { pct: 0.35, label: 'Equilibrio rentabilidad/volumen' },
+        agresivo:    { pct: 0.50, label: 'Priorizar volumen y cuota de mercado' }
+      },
+      nota: 'Asesorías y servicios high-ticket tienen márgenes altos (70-85%). El escenario estándar destina 35% del LTV con margen a publicidad. El agresivo reinvierte casi la mitad del beneficio bruto en crecimiento — solo viable si el cliente tiene caja y quiere escalar rápido.'
+    },
+    infoproducto: {
+      nombre: 'Infoproducto / curso',
+      margenEstimado: 80,
+      escenarios: {
+        conservador: { pct: 0.30, label: 'Beneficio desde el primer cliente' },
+        estandar:    { pct: 0.40, label: 'Balance entre margen y escala' },
+        agresivo:    { pct: 0.55, label: 'Backend/upsells obligatorios para compensar' }
+      },
+      nota: 'Infoproductos tienen márgenes muy altos pero competencia brutal en subasta. El escenario agresivo solo tiene sentido si hay upsells, membership o backend que compense el CAC inicial.'
+    },
+    ecommerce: {
+      nombre: 'Ecommerce',
+      margenEstimado: 40,
+      escenarios: {
+        conservador: { pct: 0.20, label: 'Ecommerce con recurrencia baja' },
+        estandar:    { pct: 0.30, label: 'Márgenes típicos de ecommerce' },
+        agresivo:    { pct: 0.45, label: 'Solo si hay LTV real con recompra' }
+      },
+      nota: 'Ecommerce tiene márgenes más ajustados (30-50%). El escenario agresivo requiere datos reales de recompra — no asumas LTV alto si no está medido.'
+    },
+    servicio: {
+      nombre: 'Servicio recurrente',
+      margenEstimado: 60,
+      escenarios: {
+        conservador: { pct: 0.25, label: 'Churn no medido, cautela' },
+        estandar:    { pct: 0.35, label: 'Churn conocido y estable' },
+        agresivo:    { pct: 0.50, label: 'LTV alto y confirmado' }
+      },
+      nota: 'Servicios recurrentes dependen del churn. Si no lo tienes medido con datos reales, quédate en conservador.'
+    }
+  };
+
+  const STORAGE_KEY = 'meta_ads_clientes_v4';
+  let clientes = [];
+  let modoMargen = 'rapido';
+  let escenarioActivo = 'estandar';
+
+  function loadClientes() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) clientes = JSON.parse(raw);
+    } catch(e) { clientes = []; }
+    renderClientesGuardados();
+    renderClienteSelect();
+  }
+
+  function saveAllClientes() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(clientes)); }
+    catch(e) { alert('No se pudo guardar. Comprueba que tu navegador permite localStorage.'); }
+  }
+
+  function toggleMode(mode) {
+    modoMargen = mode;
+    document.querySelectorAll('.mode-btn').forEach(b => {
+      b.classList.toggle('active', b.getAttribute('data-mode') === mode);
+    });
+    if (mode === 'rapido') {
+      $('info-rapido').classList.remove('hidden');
+      $('info-preciso').classList.add('hidden');
+      $('campo-margen').classList.add('hidden');
+    } else {
+      $('info-rapido').classList.add('hidden');
+      $('info-preciso').classList.remove('hidden');
+      $('campo-margen').classList.remove('hidden');
+      const tipo = $('tipo').value;
+      if (!$('margen').value) $('margen').value = BENCHMARKS[tipo].margenEstimado;
+    }
+  }
+
+  function calcular() {
+    const nombre = $('cliente').value.trim() || 'Cliente sin nombre';
+    const tipo = $('tipo').value;
+    const ticket = parseFloat($('ticket').value) || 0;
+    const renovaciones = parseFloat($('renovaciones').value) || 0;
+
+    if (!ticket || !renovaciones) { alert('Rellena ticket medio y renovaciones'); return; }
+
+    const bench = BENCHMARKS[tipo];
+    let margen;
+
+    if (modoMargen === 'rapido') {
+      margen = bench.margenEstimado / 100;
+    } else {
+      margen = parseFloat($('margen').value) / 100 || 0;
+      if (!margen) { alert('Introduce el margen bruto o cambia a modo rápido'); return; }
+    }
+
+    const ltv = ticket * renovaciones;
+    const ltvMargen = ltv * margen;
+    const breakeven = 1 / margen;
+
+    const escenarios = ['conservador', 'estandar', 'agresivo'].map(key => {
+      const esc = bench.escenarios[key];
+      const cac = ltvMargen * esc.pct;
+      const presupuestoMin = (50 / 7) * cac;
+      return {
+        key, nombre: key.charAt(0).toUpperCase() + key.slice(1),
+        label: esc.label, pct: esc.pct, cac, presupuestoMin,
+        beneficioPorCliente: ltvMargen - cac
+      };
+    });
+
+    const grid = $('scenarios-grid');
+    grid.innerHTML = '';
+    escenarios.forEach(esc => {
+      const isRecommended = esc.key === 'estandar';
+      const div = document.createElement('div');
+      div.className = 'scenario' + (isRecommended ? ' recommended' : '');
+      div.innerHTML =
+        (isRecommended ? '<span class="scenario-badge">Recomendado</span>' : '') +
+        '<p class="scenario-name">' + esc.nombre + '</p>' +
+        '<p class="scenario-cac">' + fmt(esc.cac) + '</p>' +
+        '<p class="scenario-subtitle">CAC objetivo · ' + Math.round(esc.pct * 100) + '% del LTV con margen</p>' +
+        '<div class="scenario-divider">' +
+          '<div class="scenario-row"><span class="lbl">Presupuesto mín/día</span><span class="val">' + fmt(esc.presupuestoMin) + '</span></div>' +
+          '<div class="scenario-row"><span class="lbl">Beneficio/cliente</span><span class="val">' + fmt(esc.beneficioPorCliente) + '</span></div>' +
+        '</div>' +
+        '<p class="scenario-desc">' + esc.label + '</p>';
+      grid.appendChild(div);
+    });
+
+    $('r-ltv').textContent = fmt(ltv);
+    $('r-ltv-margen').textContent = fmt(ltvMargen);
+    $('r-margen').textContent = Math.round(margen * 100) + '%' + (modoMargen === 'rapido' ? ' (est.)' : '');
+    $('r-roas').textContent = breakeven.toFixed(2) + 'X';
+
+    $('resultados-desc').innerHTML =
+      'Para <strong>' + bench.nombre.toLowerCase() + '</strong> con ticket de ' + fmt(ticket) +
+      ' × ' + renovaciones + ' renovaciones (LTV ' + fmt(ltv) + '), estos son los tres escenarios posibles. El CAC real se calculará en los semáforos a partir del CPL + % de agenda + % de cierre.';
+
+    $('como-leer').innerHTML = bench.nota +
+      '<br><br><strong>Presupuesto mín/día</strong>: (50 eventos / 7 días) × CAC objetivo. Lo necesario para salir de learning phase en 1 semana.' +
+      '<br><strong>Breakeven ROAS</strong>: ' + breakeven.toFixed(2) + 'X con margen del ' + Math.round(margen*100) + '%. Por debajo pierdes dinero.';
+
+    $('resultados').classList.remove('hidden');
+
+    window._currentCalc = {
+      nombre, tipo, ticket, renovaciones,
+      margen: Math.round(margen * 100), modoMargen,
+      ltv, ltvMargen, breakeven,
+      escenarios: escenarios.map(e => ({
+        key: e.key, cac: e.cac,
+        presupuestoMin: e.presupuestoMin, pct: e.pct
+      }))
+    };
+  }
+
+  function renderClientesGuardados() {
+    const cont = $('clientes-guardados');
+    if (!cont) return;
+    if (clientes.length === 0) { cont.innerHTML = ''; return; }
+    let html = '<p class="client-list-title">Clientes guardados</p><div class="client-chips">';
+    clientes.forEach(c => {
+      const cacEstandar = c.escenarios.find(e => e.key === 'estandar').cac;
+      html += '<span class="client-chip">' +
+                '<button type="button" class="load-cliente" data-nombre="' + c.nombre.replace(/"/g,'&quot;') + '" style="all:unset; cursor:pointer; display:flex; align-items:center; gap:8px;">' +
+                  '<span class="chip-dot" style="background:var(--accent);"></span>' +
+                  c.nombre + ' · CAC ' + fmt(cacEstandar) +
+                '</button>' +
+                '<button type="button" class="chip-del" data-nombre="' + c.nombre.replace(/"/g,'&quot;') + '" title="Eliminar">×</button>' +
+              '</span>';
+    });
+    html += '</div>';
+    cont.innerHTML = html;
+
+    cont.querySelectorAll('.load-cliente').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const c = clientes.find(x => x.nombre === btn.getAttribute('data-nombre'));
+        if (!c) return;
+        $('cliente').value = c.nombre;
+        $('tipo').value = c.tipo;
+        $('ticket').value = c.ticket;
+        $('renovaciones').value = c.renovaciones;
+        if (c.modoMargen === 'preciso') { toggleMode('preciso'); $('margen').value = c.margen; }
+        else { toggleMode('rapido'); }
+        calcular();
+      });
+    });
+
+    cont.querySelectorAll('.chip-del').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const nombre = btn.getAttribute('data-nombre');
+        if (!confirm('¿Eliminar "' + nombre + '"?')) return;
+        clientes = clientes.filter(c => c.nombre !== nombre);
+        saveAllClientes();
+        renderClientesGuardados();
+        renderClienteSelect();
+      });
+    });
+  }
+
+  function renderClienteSelect() {
+    const sel = $('cliente-select');
+    if (!sel) return;
+    sel.innerHTML = '<option value="">Selecciona un cliente guardado</option>';
+    clientes.forEach(c => {
+      const o = document.createElement('option');
+      o.value = c.nombre;
+      o.textContent = c.nombre;
+      sel.appendChild(o);
+    });
+
+    if (clientes.length === 0) {
+      $('sin-clientes').classList.remove('hidden');
+      $('formulario-semaforos').classList.add('hidden');
+    } else {
+      $('sin-clientes').classList.add('hidden');
+    }
+  }
+
+  function evaluar() {
+    const clienteNombre = $('cliente-select').value;
+    if (!clienteNombre) { alert('Selecciona un cliente primero'); return; }
+    const c = clientes.find(x => x.nombre === clienteNombre);
+    if (!c) return;
+
+    const cpl = parseFloat($('s-cpl').value) || 0;
+    const pctAgenda = parseFloat($('s-agenda').value) / 100 || 0;
+    const pctCierre = parseFloat($('s-cierre').value) / 100 || 0;
+    const presupuestoActual = parseFloat($('s-presupuesto').value) || 0;
+
+    if (!cpl || !pctAgenda || !pctCierre || !presupuestoActual) {
+      alert('Rellena CPL, % agenda, % cierre y presupuesto actual');
+      return;
+    }
+
+    // CAC real = CPL / (% agenda × % cierre)
+    const conversionTotal = pctAgenda * pctCierre;
+    const cacReal = cpl / conversionTotal;
+
+    // Obtener los 3 CAC de referencia de los escenarios
+    const cacConservador = c.escenarios.find(e => e.key === 'conservador').cac;
+    const cacEstandar    = c.escenarios.find(e => e.key === 'estandar').cac;
+    const cacAgresivo    = c.escenarios.find(e => e.key === 'agresivo').cac;
+
+    // Mostrar CAC real con desglose
+    $('cac-real-value').textContent = fmt(cacReal);
+    $('cac-real-formula').textContent =
+      'CPL ' + fmt2(cpl) + ' / (' + (pctAgenda*100).toFixed(1) + '% × ' + (pctCierre*100).toFixed(1) + '%) = ' +
+      'CPL ' + fmt2(cpl) + ' / ' + (conversionTotal*100).toFixed(2) + '% = ' + fmt(cacReal);
+
+    // Renderizar visualización de posición del CAC real entre escenarios
+    const grid = $('semaforos-grid');
+    grid.innerHTML = '';
+
+    const escenariosRef = [
+      { nombre: 'CAC Conservador', cac: cacConservador, color: '#639922',
+        desc: 'Máximo margen por cliente' },
+      { nombre: 'CAC Estándar', cac: cacEstandar, color: '#EF9F27',
+        desc: 'Equilibrio margen/volumen' },
+      { nombre: 'CAC Agresivo', cac: cacAgresivo, color: '#E24B4A',
+        desc: 'Límite de rentabilidad' }
+    ];
+
+    escenariosRef.forEach(esc => {
+      const diff = cacReal - esc.cac;
+      const diffPct = ((cacReal / esc.cac - 1) * 100);
+      let diffText;
+      if (cacReal <= esc.cac) {
+        diffText = fmt(Math.abs(diff)) + ' por debajo (' + Math.abs(diffPct).toFixed(0) + '%)';
+      } else {
+        diffText = fmt(diff) + ' por encima (+' + diffPct.toFixed(0) + '%)';
+      }
+      const div = document.createElement('div');
+      div.className = 'sem-card';
+      div.style.borderLeft = '3px solid ' + esc.color;
+      div.innerHTML =
+        '<p class="sem-label">' + esc.nombre + '</p>' +
+        '<p class="sem-value">' + fmt(esc.cac) + '</p>' +
+        '<p class="sem-text">' + diffText + '</p>';
+      grid.appendChild(div);
+    });
+
+    // Lógica de decisión: posición del CAC real entre los 3 umbrales
+    let titulo, accion, bgClass, escaladoPct, cadencia, cuandoEmpezar, zona;
+
+    if (cacReal <= cacConservador * 0.9) {
+      // Muy por debajo del conservador — margen extraordinario
+      zona = 'excelente';
+      titulo = 'Escalar muy agresivo — márgenes excepcionales';
+      accion = 'Tu CAC real (' + fmt(cacReal) + ') está por debajo incluso del escenario conservador (' + fmt(cacConservador) + '). Cada cliente genera un beneficio muy alto. Aprovecha la ventana y escala al máximo antes de que el mercado se dé cuenta.';
+      bgClass = 'diag-saludable'; escaladoPct = 25; cadencia = '5 días';
+      cuandoEmpezar = 'Inmediatamente';
+    } else if (cacReal <= cacConservador) {
+      // Cerca o igual al conservador — escalado agresivo
+      zona = 'conservador';
+      titulo = 'Escalar agresivo — zona de máximo margen';
+      accion = 'Tu CAC real (' + fmt(cacReal) + ') está dentro del escenario conservador (≤ ' + fmt(cacConservador) + '). Buen beneficio por cliente y margen amplio para escalar rápido.';
+      bgClass = 'diag-saludable'; escaladoPct = 20; cadencia = '5 días';
+      cuandoEmpezar = 'Inmediatamente';
+    } else if (cacReal <= cacEstandar) {
+      // Entre conservador y estándar — escalado controlado
+      zona = 'estandar-bajo';
+      titulo = 'Escalar controlado — zona estándar';
+      accion = 'Tu CAC real (' + fmt(cacReal) + ') está entre el conservador (' + fmt(cacConservador) + ') y el estándar (' + fmt(cacEstandar) + '). Rentable, pero sin el colchón del conservador. Escala de forma controlada.';
+      bgClass = 'diag-saludable'; escaladoPct = 15; cadencia = '7 días';
+      cuandoEmpezar = 'Inmediatamente, con cadencia prudente';
+    } else if (cacReal <= cacAgresivo * 0.85) {
+      // Justo por encima del estándar — escalado mínimo
+      zona = 'estandar-alto';
+      titulo = 'Escalar mínimo — acercándote al límite';
+      accion = 'Tu CAC real (' + fmt(cacReal) + ') está por encima del estándar pero lejos del agresivo. Puedes escalar muy despacio mientras optimizas el embudo para bajarlo.';
+      bgClass = 'diag-riesgo'; escaladoPct = 10; cadencia = '10 días';
+      cuandoEmpezar = 'Con cautela. Prioriza optimizar el embudo antes de subir mucho';
+    } else if (cacReal <= cacAgresivo) {
+      // Cerca del agresivo — mantener
+      zona = 'agresivo';
+      titulo = 'Mantener y optimizar — estás en el límite';
+      accion = 'Tu CAC real (' + fmt(cacReal) + ') está cerca del escenario agresivo (' + fmt(cacAgresivo) + '), el máximo que el negocio puede permitirse. Escalar ahora es arriesgado: cualquier subida de CPMs o caída de conversión te mete en pérdidas. Optimiza embudo primero.';
+      bgClass = 'diag-riesgo'; escaladoPct = 0;
+      cuandoEmpezar = 'Cuando el CAC real baje al menos hasta ' + fmt(cacEstandar) + ' (escenario estándar)';
+    } else {
+      // Por encima del agresivo — zona roja
+      zona = 'fuera';
+      titulo = 'NO escalar — CAC fuera de rango rentable';
+      accion = 'Tu CAC real (' + fmt(cacReal) + ') supera el escenario agresivo (' + fmt(cacAgresivo) + '), que ya es el límite de rentabilidad del negocio. Estás captando clientes a pérdidas. Corrige embudo o creativo antes de gastar más.';
+      bgClass = 'diag-suicida'; escaladoPct = 0;
+      cuandoEmpezar = 'Cuando el CAC real baje por debajo de ' + fmt(cacAgresivo);
+    }
+
+    const diagBox = $('diagnostico-global');
+    diagBox.className = 'diag-box ' + bgClass;
+    $('diag-titulo').textContent = titulo;
+    $('diag-accion').textContent = accion;
+
+    if (escaladoPct > 0) {
+      const nuevoPresup = Math.round(presupuestoActual * (1 + escaladoPct/100));
+      $('recomendacion-texto').innerHTML =
+        '<strong>Cuándo empezar:</strong> ' + cuandoEmpezar + '.<br>' +
+        '<strong>Cuánto subir:</strong> +' + escaladoPct + '% cada ' + cadencia + '.<br>' +
+        '<strong>Próximo movimiento:</strong> de ' + fmt(presupuestoActual) + '/día a ' + fmt(nuevoPresup) + '/día. Esperar ' + cadencia + ' antes del siguiente incremento. NO modificar creativos ni audiencias durante este periodo.';
+      $('recomendacion-numerica').innerHTML =
+        '<div class="rec-grid">' +
+        '<div class="rec-card rec-current"><p class="rec-label">Presupuesto actual</p><p class="rec-value">' + fmt(presupuestoActual) + '/día</p></div>' +
+        '<div class="rec-card rec-new"><p class="rec-label">Nuevo presupuesto</p><p class="rec-value">' + fmt(nuevoPresup) + '/día</p></div>' +
+        '</div>';
+    } else {
+      $('recomendacion-texto').innerHTML =
+        '<strong>Cuándo empezar:</strong> ' + cuandoEmpezar + '.<br>' +
+        '<strong>Mientras tanto:</strong> mantener presupuesto en ' + fmt(presupuestoActual) + '/día y optimizar el embudo (bajar CPL, subir % agenda o % cierre) para reducir el CAC real.';
+      $('recomendacion-numerica').innerHTML = '';
+    }
+
+    $('evaluacion').classList.remove('hidden');
+  }
+
+  // Event listeners
+  $('tab-economia').addEventListener('click', () => {
+    $('panel-economia').classList.remove('hidden');
+    $('panel-semaforos').classList.add('hidden');
+    $('tab-economia').classList.add('active');
+    $('tab-semaforos').classList.remove('active');
+  });
+  $('tab-semaforos').addEventListener('click', () => {
+    $('panel-economia').classList.add('hidden');
+    $('panel-semaforos').classList.remove('hidden');
+    $('tab-semaforos').classList.add('active');
+    $('tab-economia').classList.remove('active');
+    renderClienteSelect();
+  });
+
+  document.querySelectorAll('.mode-btn').forEach(b => {
+    b.addEventListener('click', () => toggleMode(b.getAttribute('data-mode')));
+  });
+
+  $('tipo').addEventListener('change', () => {
+    if (modoMargen === 'preciso') {
+      $('margen').value = BENCHMARKS[$('tipo').value].margenEstimado;
+    }
+  });
+
+  $('cliente-select').addEventListener('change', () => {
+    const nombre = $('cliente-select').value;
+    if (!nombre) {
+      $('formulario-semaforos').classList.add('hidden');
+      return;
+    }
+    const c = clientes.find(x => x.nombre === nombre);
+    if (c) $('formulario-semaforos').classList.remove('hidden');
+  });
+
+  $('calcular').addEventListener('click', calcular);
+  $('evaluar').addEventListener('click', evaluar);
+
+  $('guardar').addEventListener('click', () => {
+    if (!window._currentCalc) { alert('Calcula primero los escenarios'); return; }
+    const existe = clientes.findIndex(c => c.nombre === window._currentCalc.nombre);
+    if (existe >= 0) clientes[existe] = window._currentCalc;
+    else clientes.push(window._currentCalc);
+    saveAllClientes();
+    renderClientesGuardados();
+    renderClienteSelect();
+    const btn = $('guardar'); const txt = btn.textContent;
+    btn.textContent = 'Guardado ✓';
+    setTimeout(() => btn.textContent = txt, 1500);
+  });
+
+  loadClientes();
+})();
+</script>
+</body>
+</html>
