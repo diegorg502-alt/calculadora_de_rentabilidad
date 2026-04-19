@@ -467,7 +467,7 @@
   }
   .cac-gauge-marker::after {
     content: attr(data-value); position: absolute;
-    top: 28px; left: 50%; transform: translateX(-50%);
+    top: 28px; left: 50%; transform: translateX(calc(-50% + var(--tt-shift, 0px)));
     background: var(--text); color: var(--bg);
     font-size: 12px; font-weight: 600;
     padding: 4px 10px; border-radius: var(--radius-sm);
@@ -497,6 +497,47 @@
   #gauge-lbl-conservador { color: var(--green-solid); }
   #gauge-lbl-estandar    { color: var(--amber-solid); }
   #gauge-lbl-agresivo    { color: var(--red-solid); }
+
+  /* Leyenda alternativa para móvil (etiquetas posicionadas se solapan en pantallas estrechas) */
+  .cac-gauge-legend { display: none; }
+
+  @media (max-width: 640px) {
+    .cac-gauge-wrap { padding: 1.25rem 1rem 1rem; }
+    .cac-gauge-bar { margin-bottom: 18px; }
+    .cac-gauge-labels { display: none; }
+    .cac-gauge-legend {
+      display: flex; flex-direction: column; gap: 8px;
+      margin-top: 8px;
+      padding-top: 12px; border-top: 0.5px solid var(--border);
+    }
+    .cac-gauge-legend .leg-row {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 10px; font-size: 12.5px;
+    }
+    .cac-gauge-legend .leg-name {
+      display: inline-flex; align-items: center; gap: 7px;
+      font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
+      font-size: 11px;
+    }
+    .cac-gauge-legend .leg-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+    }
+    .cac-gauge-legend .leg-value {
+      font-size: 14px; font-weight: 600; letter-spacing: -0.01em;
+      color: var(--text);
+    }
+    .cac-gauge-legend .leg-row.green .leg-name { color: var(--green-solid); }
+    .cac-gauge-legend .leg-row.amber .leg-name { color: var(--amber-solid); }
+    .cac-gauge-legend .leg-row.red   .leg-name { color: var(--red-solid); }
+    .cac-gauge-legend .leg-row.green .leg-dot { background: var(--green-solid); }
+    .cac-gauge-legend .leg-row.amber .leg-dot { background: var(--amber-solid); }
+    .cac-gauge-legend .leg-row.red   .leg-dot { background: var(--red-solid); }
+
+    /* Tooltip del marcador más compacto para que no se salga */
+    .cac-gauge-marker::after {
+      font-size: 11px; padding: 3px 8px;
+    }
+  }
 
   .rec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
   .rec-card {
@@ -748,6 +789,20 @@
             <span id="gauge-lbl-conservador">Conservador</span>
             <span id="gauge-lbl-estandar">Estándar</span>
             <span id="gauge-lbl-agresivo">Agresivo</span>
+          </div>
+          <div class="cac-gauge-legend">
+            <div class="leg-row green">
+              <span class="leg-name"><span class="leg-dot"></span>Conservador</span>
+              <span class="leg-value" id="leg-conservador">—</span>
+            </div>
+            <div class="leg-row amber">
+              <span class="leg-name"><span class="leg-dot"></span>Estándar</span>
+              <span class="leg-value" id="leg-estandar">—</span>
+            </div>
+            <div class="leg-row red">
+              <span class="leg-name"><span class="leg-dot"></span>Agresivo</span>
+              <span class="leg-value" id="leg-agresivo">—</span>
+            </div>
           </div>
         </div>
 
@@ -1097,10 +1152,24 @@
     lblEstandar.innerHTML    = 'Estándar<strong>' + fmt(cacEstandar) + '</strong>';
     lblAgresivo.innerHTML    = 'Agresivo<strong>' + fmt(cacAgresivo) + '</strong>';
 
+    // Leyenda móvil
+    $('leg-conservador').textContent = fmt(cacConservador);
+    $('leg-estandar').textContent    = fmt(cacEstandar);
+    $('leg-agresivo').textContent    = fmt(cacAgresivo);
+
     // Marcador del CAC real
     const gauge = $('cac-gauge-marker');
     gauge.style.left = posReal + '%';
     gauge.setAttribute('data-value', fmt(cacReal));
+
+    // Evitar que el tooltip se corte en los bordes (desplaza el tooltip sin mover el marcador)
+    const barWidth = $('cac-gauge-bar').offsetWidth || 320;
+    const markerPxLeft = (posReal / 100) * barWidth;
+    const tooltipHalf = 38; // ancho aproximado del tooltip / 2
+    let shift = 0;
+    if (markerPxLeft - tooltipHalf < 0) shift = tooltipHalf - markerPxLeft;
+    else if (markerPxLeft + tooltipHalf > barWidth) shift = barWidth - markerPxLeft - tooltipHalf;
+    gauge.style.setProperty('--tt-shift', shift + 'px');
 
     // Lógica de decisión: posición del CAC real entre los 3 umbrales
     let titulo, accion, bgClass, escaladoPct, cadencia, cuandoEmpezar, zona;
