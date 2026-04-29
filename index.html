@@ -734,7 +734,7 @@
     <div id="formulario-semaforos" class="hidden">
 
       <p class="section-label">Estado actual de la campaña y embudo</p>
-      <p class="section-desc">Meto los 3 indicadores del embudo completo: captación (CPL), calificación (agenda) y cierre. El sistema calcula el CAC real y lo compara con los 3 escenarios del negocio para decidir si escalar y a qué velocidad.</p>
+      <p class="section-desc">Meto los 4 indicadores del embudo completo: captación (CPL), agendamiento, asistencia a la llamada y cierre. El sistema calcula el CAC real y lo compara con los 3 escenarios del negocio para decidir si escalar y a qué velocidad.</p>
 
       <div class="grid">
         <div class="field">
@@ -748,8 +748,13 @@
           <input type="number" id="s-agenda" min="0" max="100" step="0.1" placeholder="40" />
         </div>
         <div class="field">
+          <label for="s-asistencia">% de asistencia</label>
+          <p class="hint">De los agendados, cuántos asisten a la llamada</p>
+          <input type="number" id="s-asistencia" min="0" max="100" step="0.1" placeholder="70" />
+        </div>
+        <div class="field">
           <label for="s-cierre">% de cierre</label>
-          <p class="hint">De los agendados, cuántos compran</p>
+          <p class="hint">De los que asisten, cuántos compran</p>
           <input type="number" id="s-cierre" min="0" max="100" step="0.1" placeholder="25" />
         </div>
         <div class="field">
@@ -1059,16 +1064,17 @@
 
     const cpl = parseFloat($('s-cpl').value) || 0;
     const pctAgenda = parseFloat($('s-agenda').value) / 100 || 0;
+    const pctAsistencia = parseFloat($('s-asistencia').value) / 100 || 0;
     const pctCierre = parseFloat($('s-cierre').value) / 100 || 0;
     const presupuestoActual = parseFloat($('s-presupuesto').value) || 0;
 
-    if (!cpl || !pctAgenda || !pctCierre || !presupuestoActual) {
-      alert('Rellena CPL, % agenda, % cierre y presupuesto actual');
+    if (!cpl || !pctAgenda || !pctAsistencia || !pctCierre || !presupuestoActual) {
+      alert('Rellena CPL, % agenda, % asistencia, % cierre y presupuesto actual');
       return;
     }
 
-    // CAC real = CPL / (% agenda × % cierre)
-    const conversionTotal = pctAgenda * pctCierre;
+    // CAC real = CPL / (% agenda × % asistencia × % cierre)
+    const conversionTotal = pctAgenda * pctAsistencia * pctCierre;
     const cacReal = cpl / conversionTotal;
 
     // Obtener los 3 CAC de referencia de los escenarios
@@ -1079,7 +1085,7 @@
     // Mostrar CAC real con desglose
     $('cac-real-value').textContent = fmt(cacReal);
     $('cac-real-formula').textContent =
-      'CPL ' + fmt2(cpl) + ' / (' + (pctAgenda*100).toFixed(1) + '% × ' + (pctCierre*100).toFixed(1) + '%) = ' +
+      'CPL ' + fmt2(cpl) + ' / (' + (pctAgenda*100).toFixed(1) + '% × ' + (pctAsistencia*100).toFixed(1) + '% × ' + (pctCierre*100).toFixed(1) + '%) = ' +
       'CPL ' + fmt2(cpl) + ' / ' + (conversionTotal*100).toFixed(2) + '% = ' + fmt(cacReal);
 
     // Renderizar visualización de posición del CAC real entre escenarios
